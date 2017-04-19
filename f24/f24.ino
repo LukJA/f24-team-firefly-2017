@@ -86,6 +86,16 @@ const byte t1Addr[8] = {0x28, 0x2B, 0x8A, 0x63, 0x08, 0x00, 0x00, 0x1B}; //motor
 const byte t2Addr[8] = {0x28, 0x34, 0xF6, 0x64, 0x08, 0x00, 0x00, 0xAE}; //esc
 const byte t3Addr[8] = {0x28, 0xFE, 0x0A, 0x64, 0x08, 0x00, 0x00, 0x79}; //bat
 
+#include <MCP3008.h>
+ 
+//define pin connections
+#define CS_PIN 12
+#define CLOCK_PIN 9
+#define MOSI_PIN 11
+#define MISO_PIN 10
+ 
+MCP3008 adc(CLOCK_PIN, MOSI_PIN, MISO_PIN, CS_PIN);
+
 void setup() {
   // prevent interupting setup
   noInterrupts();
@@ -210,8 +220,8 @@ void loop() {
     Serial.println(sinceBoot);
 
     // voltages + warning
-    batVoltLower = (analogRead(battVoltLIn) * 3.3 * 5) / 1023; // divider is 1/5 ref is 3.3
-    batVoltTotal = (analogRead(battVoltTIn) * 3.3 * 11) / 1023; // divider is 1/11 ref is 3.3
+    batVoltLower = (adc.readadc(0) * 3.3 * 5) / 1023; // divider is 1/5 ref is 3.3
+    batVoltTotal = (adc.readadc(1) * 3.3 * 11) / 1023; // divider is 1/11 ref is 3.3
     //Serial.print(batVoltLower);
     //Serial.print(batVoltTotal);
     /*
@@ -223,7 +233,7 @@ void loop() {
 
     // current -- 0.00075 ohm resistor I = v/r
     // calculates current in A and shunts it to int
-    batCurrent = (int)(analogRead(battAmpsAIn) / 8192 * 3.3 /0.00075);
+    batCurrent = (int)(adc.readadc(battAmpsAIn) / 1024 * 3.3 /0.00075);
     /*
     if ((batCurrent > 50) && (warningCleared != "AMPS")){
       // set the warning
